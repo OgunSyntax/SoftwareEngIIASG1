@@ -1,5 +1,6 @@
-from App.models import User
+from App.models import User,Student
 from App.database import db
+from tabulate import tabulate
 
 def create_user(username, password):
     newuser = User(username=username, password=password)
@@ -32,3 +33,11 @@ def update_user(id, username):
         db.session.commit()
         return True
     return None
+
+# display all students in a leaderboard format
+def leaderboard():
+     students = Student.query.order_by(Student.hours.desc()).all()
+     table =[[i+1,s.username, s.hours] for i, s in enumerate(students)]
+     headers = ["Position","Username", "Hours"]
+
+     print(tabulate(table, headers, tablefmt="grid"))

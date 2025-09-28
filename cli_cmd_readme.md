@@ -1,65 +1,40 @@
-import click, pytest, sys
-from flask import Flask
-from flask.cli import with_appcontext, AppGroup
+# Flask Commands
+# inside wsgi.py
 
-from App.database import db, get_migrate
-from App.models import User, Student,Accolade
-from App.main import create_app
-from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize,create_student_account,confirm_student_hours,leaderboard,log_accolade_to_student,view_accolades,view_account,make_request,view_pending_requests,confirm_request)
-
-
-
-# This commands file allow you to create convenient CLI commands for testing controllers
-
-app = create_app()
-migrate = get_migrate(app)
-
-# This command creates and initializes the database
+Initilization
+```python
+#database populated with students,staff and hours
 @app.cli.command("init", help="Creates and initializes the database")
 def init():
    with app.app_context():
     initialize()
     print('database intialized')
+```
 
-'''
-User Commands
-'''
 
-# Commands can be organized using groups
+User Command
 
-# create a group, it would be the first argument of the comand
-# eg : flask user <command>
-user_cli = AppGroup('user', help='User object commands') 
+<!-- veiw Leaderboard -->
+```python
 
-# Then define the command and any parameters and annotate it with the group (@)
-@user_cli.command("create", help="Creates a user")
-@click.argument("username", default="rob")
-@click.argument("password", default="robpass")
-def create_user_command(username, password):
-    create_user(username, password)
-    print(f'{username} created!')
+# view leaderboard regualr user without login 
 
-@user_cli.command("create_student_account", help="Creates a student account")
-@click.argument("username", default="student")
-@click.argument("password", default="studentpass")
-def create_student_account_command(username, password):
-    create_student_account(username, password)
-    print(f'Student account {username} created!')
-# this command will be : flask user create bob bobpass
-
-@user_cli.command("list", help="Lists users in the database")
-@click.argument("format", default="string")
-def list_user_command(format):
-    if format == 'string':
-        print(get_all_users())
-    else:
-        print(get_all_users_json())
-
-#view leaderboard regualr user without login
 @user_cli.command("view_leaderboard", help="unregistered users could view the leaderboard")
 def leaderboard_view():
     leaderboard()
     return         
+```
+<!------>
+
+Student/Saff commands
+
+
+```Python
+# Test users
+
+# Student: Bob password: bobpass
+# Staff: admin password: adminpass
+
 #Login command
 @user_cli.command("login", help="Login a user")
 @click.argument("username", default="string")
@@ -77,13 +52,19 @@ def login_user_command(username, password):
         while True:
 
             choice = input("Input 1 view Account\nInput 2 to view Leaderboard\nInput 3 to view Account/Accolades:\nInput 4 to make a request\nType 'exit' to log out\n: ")
-
+            #Displays current student details
             if choice == '1':
                 view_account(user.id)
+
+            #Views all students with in a leaderboard format with the most hightest to lowest
             elif choice == '2':
                 leaderboard()
+
+            #view current Student Accolades
             elif choice == '3':
                 view_accolades(user.id)
+            
+            #Make a request to log in a certain ammount of hours for community service/volunteering 
             elif choice == '4':
                 description = input("Enter a description for your request: ")
                 try:
@@ -133,10 +114,12 @@ def login_user_command(username, password):
             #viewing leaderboard
             elif choice == '2':
                  leaderboard()
-            
+
+            #view 'pending' student requests
             elif choice == '3':
                 view_pending_requests()
 
+            #Confirm the requests made
             elif choice == '4':    
                 while True:
                     confirm_request_id = input("Enter the Request ID to confirm: ")
@@ -163,27 +146,4 @@ def login_user_command(username, password):
                 print("Invalid choice. Please try again.\n")
     else:
         print('Invalid username or password\n')
-
-    
-#---------------------------------------------------------------------------------
-
-app.cli.add_command(user_cli) # add the group to the cli
-
-'''
-Test Commands
-'''
-
-test = AppGroup('test', help='Testing commands') 
-
-@test.command("user", help="Run User tests")
-@click.argument("type", default="all")
-def user_tests_command(type):
-    if type == "unit":
-        sys.exit(pytest.main(["-k", "UserUnitTests"]))
-    elif type == "int":
-        sys.exit(pytest.main(["-k", "UserIntegrationTests"]))
-    else:
-        sys.exit(pytest.main(["-k", "App"]))
-    
-
-app.cli.add_command(test)
+```
